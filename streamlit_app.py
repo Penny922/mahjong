@@ -279,7 +279,6 @@ div.stButton > button[kind="secondary"]:active {
 /* =========================
    Control buttons: primary buttons
    清空、刪除、判斷按鈕
-   維持 Streamlit 原本綠色，只調整成橫向尺寸
    ========================= */
 
 div.stButton > button[kind="primary"] {
@@ -382,35 +381,6 @@ def add_tile(tile):
 
 
 # =========================
-# Tile selection area
-# =========================
-
-st.subheader("選牌區")
-
-tile_rows = [
-    ("萬子", [f"{i}m" for i in range(1, 10)]),
-    ("筒子", [f"{i}p" for i in range(1, 10)]),
-    ("條子", [f"{i}s" for i in range(1, 10)]),
-    ("字牌", ["東", "南", "西", "北", "中", "發", "白"])
-]
-
-for row_title, row_tiles in tile_rows:
-    st.markdown(f"### {row_title}")
-
-    cols = st.columns(len(row_tiles))
-
-    for i, tile in enumerate(row_tiles):
-        with cols[i]:
-            if st.button(
-                tile_button_name(tile),
-                key=f"add_{tile}",
-                type="secondary"
-            ):
-                add_tile(tile)
-                st.rerun()
-
-
-# =========================
 # Current hand area
 # =========================
 
@@ -460,6 +430,35 @@ with control_col2:
         if len(st.session_state.my_hand) > 0:
             st.session_state.my_hand.pop()
             st.rerun()
+
+
+# =========================
+# Tile selection area
+# =========================
+
+st.subheader("選牌區")
+
+tile_rows = [
+    ("萬子", [f"{i}m" for i in range(1, 10)]),
+    ("筒子", [f"{i}p" for i in range(1, 10)]),
+    ("條子", [f"{i}s" for i in range(1, 10)]),
+    ("字牌", ["東", "南", "西", "北", "中", "發", "白"])
+]
+
+for row_title, row_tiles in tile_rows:
+    st.markdown(f"### {row_title}")
+
+    cols = st.columns(len(row_tiles))
+
+    for i, tile in enumerate(row_tiles):
+        with cols[i]:
+            if st.button(
+                tile_button_name(tile),
+                key=f"add_{tile}",
+                type="secondary"
+            ):
+                add_tile(tile)
+                st.rerun()
 
 
 # =========================
