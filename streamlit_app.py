@@ -1,34 +1,146 @@
 import streamlit as st
 
 # =========================
-# Basic tile setting
+# Tile data
 # =========================
-suits = ["m", "p", "s"]
+
+suits = ["m", "p", "s"]  # m = 萬, p = 筒, s = 條
 
 ALL_CARDS = []
+
 for suit in suits:
     for num in range(1, 10):
         ALL_CARDS.append(f"{num}{suit}")
 
 ALL_CARDS += ["東", "南", "西", "北", "中", "發", "白"]
+
 types = len(ALL_CARDS)
 
-DISPLAY_NAME = {}
 
-for num in range(1, 10):
-    DISPLAY_NAME[f"{num}m"] = f"{num}萬"
-    DISPLAY_NAME[f"{num}p"] = f"{num}筒"
-    DISPLAY_NAME[f"{num}s"] = f"{num}條"
+# =========================
+# Basic conversion
+# =========================
 
-for honor in ["東", "南", "西", "北", "中", "發", "白"]:
-    DISPLAY_NAME[honor] = honor
+chinese_numbers = {
+    "1": "一",
+    "2": "二",
+    "3": "三",
+    "4": "四",
+    "5": "五",
+    "6": "六",
+    "7": "七",
+    "8": "八",
+    "9": "九"
+}
 
 
 # =========================
-# Mahjong logic
+# Display functions
 # =========================
+
+def tile_name(tile):
+    """
+    Normal display name.
+    Used in warning messages.
+    """
+
+    if tile.endswith("m"):
+        return chinese_numbers[tile[0]] + "萬"
+    elif tile.endswith("p"):
+        return chinese_numbers[tile[0]] + "筒"
+    elif tile.endswith("s"):
+        return chinese_numbers[tile[0]] + "條"
+    else:
+        return tile
+
+
+def tile_button_name(tile):
+    """
+    Button display name.
+    Tiles are shown vertically by using newline.
+    """
+
+    if tile.endswith("m"):
+        return chinese_numbers[tile[0]] + "\n萬"
+    elif tile.endswith("p"):
+        return chinese_numbers[tile[0]] + "\n筒"
+    elif tile.endswith("s"):
+        return chinese_numbers[tile[0]] + "\n條"
+    else:
+        return tile
+
+
+def format_tile(tile):
+    """
+    Format listening result tile with HTML color.
+    Rules:
+    萬：數字紅色，萬黑色
+    筒、條：黑色
+    中：紅色
+    發：綠色
+    其他字牌：黑色
+    """
+
+    if tile.endswith("m"):
+        num = chinese_numbers[tile[0]]
+        return f"""
+        <span class="tile">
+            <span style="color:red; font-weight:900;">{num}</span>
+            <span style="color:black; font-weight:900;">萬</span>
+        </span>
+        """
+
+    elif tile.endswith("p"):
+        num = chinese_numbers[tile[0]]
+        return f"""
+        <span class="tile">
+            <span style="color:black; font-weight:900;">{num}</span>
+            <span style="color:black; font-weight:900;">筒</span>
+        </span>
+        """
+
+    elif tile.endswith("s"):
+        num = chinese_numbers[tile[0]]
+        return f"""
+        <span class="tile">
+            <span style="color:black; font-weight:900;">{num}</span>
+            <span style="color:black; font-weight:900;">條</span>
+        </span>
+        """
+
+    elif tile == "中":
+        return """
+        <span class="tile">
+            <span style="color:red; font-weight:900;">中</span>
+        </span>
+        """
+
+    elif tile == "發":
+        return """
+        <span class="tile">
+            <span style="color:green; font-weight:900;">發</span>
+        </span>
+        """
+
+    else:
+        return f"""
+        <span class="tile">
+            <span style="color:black; font-weight:900;">{tile}</span>
+        </span>
+        """
+
+
+# =========================
+# Mahjong winning logic
+# =========================
+
 def win(counts):
-    # 台灣麻將：16 張手牌 + 摸進 1 張 = 17 張胡牌
+    """
+    Check whether 17 tiles form a legal winning hand.
+    Structure:
+    1 pair + 5 groups
+    """
+
     if sum(counts) != 17:
         return False
 
@@ -44,10 +156,18 @@ def win(counts):
 
 
 def is_valid(number):
+    """
+    Check whether the remaining tiles can be divided into valid groups.
+    Valid groups:
+    1. Triplet
+    2. Sequence
+    """
+
     if sum(number) == 0:
         return True
 
     first = 0
+
     while first < types and number[first] == 0:
         first += 1
 
@@ -65,6 +185,8 @@ def is_valid(number):
         number[first] += 3
 
     # Check sequence
+    # Only suited tiles can form sequences.
+    # Honors cannot form sequences.
     if first < 27 and (first % 9) <= 6:
         if number[first + 1] > 0 and number[first + 2] > 0:
             number[first] -= 1
@@ -84,314 +206,322 @@ def is_valid(number):
     return False
 
 
-def check_tenpai(hand_counts):
-    waiting_tiles = []
-
-    for i in range(types):
-        if hand_counts[i] < 4:
-            hand_counts[i] += 1
-
-            if win(hand_counts):
-                waiting_tiles.append(ALL_CARDS[i])
-
-            hand_counts[i] -= 1
-
-    return waiting_tiles
-
-
 # =========================
 # Streamlit page setting
 # =========================
+
 st.set_page_config(
-    page_title="台灣麻將聽牌判斷器",
+    page_title="麻將聽牌判斷器",
     page_icon="🀄",
-    layout="wide"
+    layout="centered"
 )
+
 
 # =========================
 # CSS style
 # =========================
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-color: #0b5c3b;
-        color: white;
-    }
 
-    h1, h2, h3, p, div {
-        font-family: "Microsoft JhengHei", sans-serif;
-    }
+st.markdown("""
+<style>
 
-    .title-box {
-        text-align: center;
-        padding: 20px;
-        background: linear-gradient(135deg, #116b45, #083d29);
-        border-radius: 20px;
-        margin-bottom: 20px;
-        border: 3px solid #d6b46a;
-    }
+/* =========================
+   Tile buttons: secondary buttons
+   選牌區與目前手牌的牌按鈕
+   ========================= */
 
-    .title-box h1 {
-        color: #ffd56b;
-        font-size: 42px;
-        margin-bottom: 5px;
-    }
+div.stButton > button[kind="secondary"] {
+    width: 52px !important;
+    height: 78px !important;
+    min-width: 52px !important;
+    min-height: 78px !important;
 
-    .title-box p {
-        color: white;
-        font-size: 18px;
-    }
+    background-color: #fff8e7 !important;
+    color: black !important;
 
-    .hand-box {
-        background-color: #063d29;
-        padding: 20px;
-        border-radius: 18px;
-        border: 2px solid #d6b46a;
-        margin-top: 15px;
-        margin-bottom: 15px;
-    }
+    border: 2px solid #333 !important;
+    border-radius: 8px !important;
 
-    .tile {
-        display: inline-block;
-        background-color: #fff8e7;
-        color: #111111;
-        border: 2px solid #c9b27c;
-        border-radius: 10px;
-        padding: 10px 8px;
-        margin: 5px;
-        min-width: 45px;
-        text-align: center;
-        font-weight: bold;
-        font-size: 20px;
-        box-shadow: 2px 3px 4px rgba(0,0,0,0.35);
-    }
+    padding: 0px !important;
+    margin: 2px !important;
 
-    .result-box {
-        background-color: #fff8e7;
-        color: #111111;
-        padding: 20px;
-        border-radius: 18px;
-        border: 3px solid #d6b46a;
-        margin-top: 20px;
-        text-align: center;
-    }
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.25) !important;
 
-    div.stButton > button {
-        background-color: #fff8e7;
-        color: #111111;
-        border: 2px solid #d6b46a;
-        border-radius: 12px;
-        height: 55px;
-        width: 100%;
-        font-size: 18px;
-        font-weight: bold;
-        box-shadow: 2px 3px 4px rgba(0,0,0,0.25);
-    }
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
 
-    div.stButton > button:hover {
-        background-color: #ffd56b;
-        color: #111111;
-        border: 2px solid white;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+/* Tile button text */
+div.stButton > button[kind="secondary"] p {
+    margin: 0 !important;
+    color: black !important;
+    font-weight: 900 !important;
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+    white-space: pre-line !important;
+    text-align: center !important;
+}
+
+/* Tile button hover */
+div.stButton > button[kind="secondary"]:hover {
+    background-color: #f3e2c7 !important;
+    color: black !important;
+    border: 2px solid #111 !important;
+}
+
+/* Tile button active */
+div.stButton > button[kind="secondary"]:active {
+    background-color: #ead2ad !important;
+    color: black !important;
+}
+
+
+/* =========================
+   Control buttons: primary buttons
+   清空、刪除、判斷按鈕
+   ========================= */
+
+div.stButton > button[kind="primary"] {
+    width: 120px !important;
+    height: 42px !important;
+    min-width: 120px !important;
+    min-height: 42px !important;
+
+    background-color: #eeeeee !important;
+    color: black !important;
+
+    border: 2px solid #333 !important;
+    border-radius: 8px !important;
+
+    padding: 0px 12px !important;
+    margin: 2px !important;
+
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.2) !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Control button text */
+div.stButton > button[kind="primary"] p {
+    margin: 0 !important;
+    color: black !important;
+    font-weight: 900 !important;
+    font-size: 20px !important;
+    line-height: 1.0 !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+}
+
+/* Control button hover */
+div.stButton > button[kind="primary"]:hover {
+    background-color: #dddddd !important;
+    color: black !important;
+    border: 2px solid #111 !important;
+}
+
+/* Control button active */
+div.stButton > button[kind="primary"]:active {
+    background-color: #cccccc !important;
+    color: black !important;
+}
+
+
+/* =========================
+   Tile style for listening result
+   聽牌結果牌面
+   ========================= */
+
+.tile {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 52px;
+    height: 78px;
+
+    text-align: center;
+    margin: 4px;
+
+    border: 2px solid #333;
+    border-radius: 8px;
+
+    background-color: #fff8e7;
+
+    font-size: 24px;
+    font-weight: 900;
+
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+
+    vertical-align: middle;
+    line-height: 1.1;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# =========================
+# Title
+# =========================
+
+st.title("麻將聽牌判斷器")
+st.write("請選擇你的 16 張手牌，系統會判斷目前聽哪些牌。")
+
 
 # =========================
 # Session state
 # =========================
-if "hand_counts" not in st.session_state:
-    st.session_state.hand_counts = [0] * types
 
-if "result" not in st.session_state:
-    st.session_state.result = None
+if "my_hand" not in st.session_state:
+    st.session_state.my_hand = []
 
 
 # =========================
-# Helper functions
+# Add tile function
 # =========================
+
 def add_tile(tile):
-    idx = ALL_CARDS.index(tile)
-
-    if sum(st.session_state.hand_counts) >= 16:
-        st.warning("已經選滿 16 張牌。")
-        return
-
-    if st.session_state.hand_counts[idx] >= 4:
-        st.warning(f"{DISPLAY_NAME[tile]} 最多只能有 4 張。")
-        return
-
-    st.session_state.hand_counts[idx] += 1
-
-
-def remove_tile(tile):
-    idx = ALL_CARDS.index(tile)
-
-    if st.session_state.hand_counts[idx] > 0:
-        st.session_state.hand_counts[idx] -= 1
-
-
-def clear_hand():
-    st.session_state.hand_counts = [0] * types
-    st.session_state.result = None
-
-
-def render_hand():
-    html = ""
-
-    for idx, count in enumerate(st.session_state.hand_counts):
-        for _ in range(count):
-            html += f'<span class="tile">{DISPLAY_NAME[ALL_CARDS[idx]]}</span>'
-
-    if html == "":
-        html = "<p>尚未選牌</p>"
-
-    st.markdown(
-        f"""
-        <div class="hand-box">
-            <h3>目前手牌</h3>
-            {html}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-def render_waiting_tiles(waiting_tiles):
-    html = ""
-
-    for tile in waiting_tiles:
-        html += f'<span class="tile">{DISPLAY_NAME[tile]}</span>'
-
-    st.markdown(
-        f"""
-        <div class="result-box">
-            <h2>有聽牌！</h2>
-            <p>你聽的牌是：</p>
-            {html}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-# =========================
-# UI
-# =========================
-st.markdown(
     """
-    <div class="title-box">
-        <h1>🀄 台灣麻將聽牌判斷器</h1>
-        <p>點選麻將牌加入手牌，選滿 16 張後判斷是否聽牌</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+    Add one tile to hand.
+    Maximum:
+    16 tiles in hand
+    4 identical tiles
+    """
 
-total_tiles = sum(st.session_state.hand_counts)
+    if len(st.session_state.my_hand) >= 16:
+        st.warning("最多只能選 16 張牌")
+        return
 
-col_a, col_b, col_c = st.columns([1, 1, 1])
+    if st.session_state.my_hand.count(tile) >= 4:
+        st.warning(f"{tile_name(tile)} 最多只能有 4 張")
+        return
 
-with col_a:
-    st.metric("目前張數", f"{total_tiles} / 16")
+    st.session_state.my_hand.append(tile)
 
-with col_b:
-    if st.button("清空手牌"):
-        clear_hand()
+
+# =========================
+# Tile selection area
+# =========================
+
+st.subheader("選牌區")
+
+tile_rows = [
+    ("萬子", [f"{i}m" for i in range(1, 10)]),
+    ("筒子", [f"{i}p" for i in range(1, 10)]),
+    ("條子", [f"{i}s" for i in range(1, 10)]),
+    ("字牌", ["東", "南", "西", "北", "中", "發", "白"])
+]
+
+for row_title, row_tiles in tile_rows:
+    st.markdown(f"### {row_title}")
+
+    cols = st.columns(len(row_tiles))
+
+    for i, tile in enumerate(row_tiles):
+        with cols[i]:
+            if st.button(
+                tile_button_name(tile),
+                key=f"add_{tile}",
+                type="secondary"
+            ):
+                add_tile(tile)
+                st.rerun()
+
+
+# =========================
+# Current hand area
+# =========================
+
+st.subheader("目前手牌")
+st.write(f"目前已選：{len(st.session_state.my_hand)} / 16 張")
+
+if len(st.session_state.my_hand) > 0:
+    st.write("點選下方手牌即可移除該張牌")
+
+    cards_per_row = 8
+
+    for row_start in range(0, len(st.session_state.my_hand), cards_per_row):
+        row_tiles = st.session_state.my_hand[row_start:row_start + cards_per_row]
+
+        cols = st.columns(cards_per_row)
+
+        for i, tile in enumerate(row_tiles):
+            hand_index = row_start + i
+
+            with cols[i]:
+                if st.button(
+                    tile_button_name(tile),
+                    key=f"remove_{hand_index}_{tile}",
+                    type="secondary"
+                ):
+                    st.session_state.my_hand.pop(hand_index)
+                    st.rerun()
+else:
+    st.write("尚未選牌")
+
+
+# =========================
+# Control buttons
+# =========================
+
+st.subheader("操作")
+
+control_col1, control_col2 = st.columns(2)
+
+with control_col1:
+    if st.button("清空", type="primary"):
+        st.session_state.my_hand = []
         st.rerun()
 
-with col_c:
-    if st.button("判斷聽牌"):
-        if total_tiles != 16:
-            st.session_state.result = "invalid"
-        else:
-            st.session_state.result = check_tenpai(st.session_state.hand_counts)
-
-render_hand()
-
-st.divider()
-
-# =========================
-# Tile buttons
-# =========================
-st.subheader("萬子")
-cols = st.columns(9)
-for i in range(9):
-    tile = f"{i + 1}m"
-    with cols[i]:
-        if st.button(DISPLAY_NAME[tile], key=f"add_{tile}"):
-            add_tile(tile)
+with control_col2:
+    if st.button("刪除", type="primary"):
+        if len(st.session_state.my_hand) > 0:
+            st.session_state.my_hand.pop()
             st.rerun()
 
-st.subheader("筒子")
-cols = st.columns(9)
-for i in range(9):
-    tile = f"{i + 1}p"
-    with cols[i]:
-        if st.button(DISPLAY_NAME[tile], key=f"add_{tile}"):
-            add_tile(tile)
-            st.rerun()
-
-st.subheader("條子")
-cols = st.columns(9)
-for i in range(9):
-    tile = f"{i + 1}s"
-    with cols[i]:
-        if st.button(DISPLAY_NAME[tile], key=f"add_{tile}"):
-            add_tile(tile)
-            st.rerun()
-
-st.subheader("字牌")
-cols = st.columns(7)
-honors = ["東", "南", "西", "北", "中", "發", "白"]
-
-for i, tile in enumerate(honors):
-    with cols[i]:
-        if st.button(DISPLAY_NAME[tile], key=f"add_{tile}"):
-            add_tile(tile)
-            st.rerun()
-
-st.divider()
 
 # =========================
-# Remove tile section
+# Listening tile calculation
 # =========================
-st.subheader("移除手牌")
 
-selected_tiles = []
-for idx, count in enumerate(st.session_state.hand_counts):
-    if count > 0:
-        selected_tiles.append(ALL_CARDS[idx])
+st.subheader("聽牌結果")
 
-if selected_tiles:
-    cols = st.columns(min(len(selected_tiles), 8))
+if st.button("判斷", type="primary"):
+    my_hand = st.session_state.my_hand
 
-    for i, tile in enumerate(selected_tiles):
-        with cols[i % len(cols)]:
-            if st.button(f"移除 {DISPLAY_NAME[tile]}", key=f"remove_{tile}"):
-                remove_tile(tile)
-                st.rerun()
-else:
-    st.write("目前沒有可移除的牌。")
+    if len(my_hand) != 16:
+        st.error("請先選滿 16 張手牌")
 
-# =========================
-# Result
-# =========================
-if st.session_state.result == "invalid":
-    st.error("請選剛好 16 張手牌。")
-
-elif isinstance(st.session_state.result, list):
-    if len(st.session_state.result) > 0:
-        render_waiting_tiles(st.session_state.result)
     else:
-        st.markdown(
-            """
-            <div class="result-box">
-                <h2>沒聽牌</h2>
-                <p>目前這副牌還沒有形成聽牌狀態。</p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        hand_counts = [0] * types
+
+        for tile in my_hand:
+            idx = ALL_CARDS.index(tile)
+            hand_counts[idx] += 1
+
+        waiting_tiles = []
+
+        for i in range(types):
+            if hand_counts[i] < 4:
+                hand_counts[i] += 1
+
+                if win(hand_counts):
+                    waiting_tiles.append(ALL_CARDS[i])
+
+                hand_counts[i] -= 1
+
+        if len(waiting_tiles) > 0:
+            st.success("有聽牌！")
+
+            result_html = ""
+
+            for tile in waiting_tiles:
+                result_html += format_tile(tile)
+
+            st.markdown(result_html, unsafe_allow_html=True)
+
+        else:
+            st.error("沒聽牌")
