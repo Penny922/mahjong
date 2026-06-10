@@ -73,19 +73,13 @@ def tile_button_name(tile):
 def format_tile(tile):
     """
     Format listening result tile with HTML color.
-    Rules:
-    萬：數字紅色，萬黑色
-    筒、條：黑色
-    中：紅色
-    發：綠色
-    其他字牌：黑色
     """
 
     if tile.endswith("m"):
         num = chinese_numbers[tile[0]]
         return f"""
         <span class="tile">
-            <span style="color:red; font-weight:900;">{num}</span>
+            <span style="color:#d00000; font-weight:900;">{num}</span>
             <span style="color:black; font-weight:900;">萬</span>
         </span>
         """
@@ -111,14 +105,14 @@ def format_tile(tile):
     elif tile == "中":
         return """
         <span class="tile">
-            <span style="color:red; font-weight:900;">中</span>
+            <span style="color:#d00000; font-weight:900;">中</span>
         </span>
         """
 
     elif tile == "發":
         return """
         <span class="tile">
-            <span style="color:green; font-weight:900;">發</span>
+            <span style="color:#008000; font-weight:900;">發</span>
         </span>
         """
 
@@ -230,55 +224,88 @@ st.markdown("""
    ========================= */
 
 div.stButton > button[kind="secondary"] {
-    width: 52px !important;
-    height: 78px !important;
-    min-width: 52px !important;
-    min-height: 78px !important;
+    width: 56px !important;
+    height: 88px !important;
+    min-width: 56px !important;
+    min-height: 88px !important;
 
-    background-color: #fff8e7 !important;
+    background: linear-gradient(
+        180deg,
+        #fffdf7 0%,
+        #fbf3e3 45%,
+        #eadcc3 100%
+    ) !important;
+
     color: black !important;
 
-    border: 2px solid #333 !important;
-    border-radius: 8px !important;
+    border: 2px solid #8a7d64 !important;
+    border-radius: 7px !important;
 
     padding: 0px !important;
-    margin: 2px !important;
+    margin: 3px !important;
 
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.25) !important;
+    box-shadow:
+        2px 4px 7px rgba(0,0,0,0.28),
+        inset 1px 1px 1px rgba(255,255,255,0.95),
+        inset -2px -2px 3px rgba(150,120,80,0.28) !important;
 
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+
+    transform: perspective(200px) rotateX(1deg);
 }
 
 /* Tile button text */
 div.stButton > button[kind="secondary"] p {
     margin: 0 !important;
+
     color: black !important;
+
+    font-family: "DFKai-SB", "KaiTi", "PMingLiU", "Noto Serif CJK TC", serif !important;
     font-weight: 900 !important;
     font-size: 24px !important;
+
     line-height: 1.05 !important;
     white-space: pre-line !important;
     text-align: center !important;
+
+    text-shadow: 0.4px 0.4px 0 rgba(0,0,0,0.15);
 }
 
 /* Tile button hover */
 div.stButton > button[kind="secondary"]:hover {
-    background-color: #f3e2c7 !important;
-    color: black !important;
-    border: 2px solid #111 !important;
+    background: linear-gradient(
+        180deg,
+        #fffefb 0%,
+        #f6ecd9 45%,
+        #e4d4b8 100%
+    ) !important;
+
+    border: 2px solid #6f644f !important;
+
+    box-shadow:
+        2px 5px 8px rgba(0,0,0,0.32),
+        inset 1px 1px 1px rgba(255,255,255,0.95),
+        inset -2px -2px 3px rgba(150,120,80,0.35) !important;
 }
 
 /* Tile button active */
 div.stButton > button[kind="secondary"]:active {
-    background-color: #ead2ad !important;
-    color: black !important;
+    background: linear-gradient(
+        180deg,
+        #efe3cb 0%,
+        #e2d2b6 100%
+    ) !important;
+
+    transform: translateY(1px);
 }
 
 
 /* =========================
    Control buttons: primary buttons
    清空、刪除、判斷按鈕
+   維持橫向
    ========================= */
 
 div.stButton > button[kind="primary"] {
@@ -317,24 +344,35 @@ div.stButton > button[kind="primary"] p {
     align-items: center;
     justify-content: center;
 
-    width: 52px;
-    height: 78px;
+    width: 56px;
+    height: 88px;
 
     text-align: center;
     margin: 4px;
 
-    border: 2px solid #333;
-    border-radius: 8px;
+    border: 2px solid #8a7d64;
+    border-radius: 7px;
 
-    background-color: #fff8e7;
+    background: linear-gradient(
+        180deg,
+        #fffdf7 0%,
+        #fbf3e3 45%,
+        #eadcc3 100%
+    );
 
+    font-family: "DFKai-SB", "KaiTi", "PMingLiU", "Noto Serif CJK TC", serif;
     font-size: 24px;
     font-weight: 900;
 
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.25);
+    box-shadow:
+        2px 4px 7px rgba(0,0,0,0.28),
+        inset 1px 1px 1px rgba(255,255,255,0.95),
+        inset -2px -2px 3px rgba(150,120,80,0.28);
 
     vertical-align: middle;
-    line-height: 1.1;
+    line-height: 1.05;
+
+    text-shadow: 0.4px 0.4px 0 rgba(0,0,0,0.15);
 }
 
 </style>
